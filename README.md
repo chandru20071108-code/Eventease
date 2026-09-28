@@ -1,29 +1,44 @@
 # EventEase 🎉
 
-EventEase is an enterprise-grade Event Management Platform designed to streamline event organization and student participation. Built with a robust Spring Boot backend and a responsive, lightweight Vanilla JS frontend, EventEase provides a seamless experience for managing, registering, and tracking events in real time.
+EventEase is a complete Event Management system featuring a Spring Boot backend and a lightweight Vanilla JS frontend. It allows organizers to create and manage events while letting students register and track their events seamlessly.
 
-## 🚀 Key Features
+## 🚀 Features
 
-- **Organizer Dashboard:** Effortlessly create and manage events, set capacity thresholds, and monitor student registrations in real time.
-- **Student Dashboard:** Explore upcoming events, register with a single click, and seamlessly track registration status.
-- **Real-Time API Integration:** Experience a fast, single-page application (SPA) architecture powered by Vite.
-- **Automated Database Seeding:** Pre-configured database seeder that automatically sets up test accounts and sample data upon startup.
+- **Organizer Dashboard:** Create new events, set capacity limits, and view registered students.
+- **Student Dashboard:** View available events, register with one click, and check registration status.
+- **Real-time API Integration:** Fast and responsive SPA built with Vite.
+- **Database seeder:** Automatically creates test users on startup.
 
-## 🛠 Technology Stack
+## 🛠️ Technology Stack
 
-### Backend
-- **Core:** Java 17 & Spring Boot 3.1.5
-- **ORM & Data Access:** Spring Data JPA
-- **Database:** MySQL
-
-### Frontend
-- **Core Technologies:** HTML5, Modern Vanilla JavaScript (ES6+), CSS3
-- **Build Tool:** Vite
+- **Backend:** Java 17, Spring Boot 3.1.5, Spring Data JPA, MySQL
+- **Frontend:** HTML, Vanilla JavaScript, CSS, Vite (Build Tool)
 
 ## ⚙️ Prerequisites
 
-Before getting started, ensure your environment meets the following requirements:
-- **Java Development Kit (JDK):** Version 17 or higher
-- **Node.js Environment:** Node.js (v18+) and npm
-- **Database:** MySQL Server running on port `3306`
-- **Build Tool:** Apache Maven (optional if using an IDE with Maven integration)
+Before you begin, ensure you have met the following requirements:
+- **Java 17** installed.
+- **Node.js** (v18+) and npm installed.
+- **MySQL Server** installed and running on default port `3306`.
+- **Maven** installed (optional, as Spring Boot can be run via IDE).
+
+## 🗄️ Database Setup
+
+Create a database in your local MySQL instance named `eventease`. 
+The application will automatically create the required tables when you start it.
+
+**Default Credentials (can be changed in `application.properties`):**
+- Username: `root`
+- Password: `8117`
+
+## 🚦 Running the Application
+
+### 1. Start the Backend (Spring Boot)
+The Spring Boot application runs on port `8081` by default.
+
+```bash
+# Navigate to the root project directory
+cd EventEase
+
+# Run using Maven
+mvn spring-boot:run
