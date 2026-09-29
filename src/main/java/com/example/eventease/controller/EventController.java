@@ -24,12 +24,28 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents() {
+    public ResponseEntity<List<EventResponse>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+    public ResponseEntity<EventResponse> getEventById(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.getEventById(id));
+    }
+
+    @GetMapping("/organizer/{organizerId}")
+    public ResponseEntity<List<EventResponse>> getEventsByOrganizer(@PathVariable String organizerId) {
+        return ResponseEntity.ok(eventService.getEventsByOrganizer(organizerId));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @Valid @RequestBody Event event) {
+        return ResponseEntity.ok(eventService.updateEvent(id, event));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
+        eventService.deleteEvent(id);
+        return ResponseEntity.noContent().build();
     }
 }

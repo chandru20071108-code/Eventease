@@ -39,7 +39,7 @@ public class RegistrationController {
     }
 
     @GetMapping("/student/{studentId}")
-    public ResponseEntity<List<com.example.eventease.entity.Event>> getEventsForStudent(@PathVariable String studentId) {
+    public ResponseEntity<List<com.example.eventease.controller.EventResponse>> getEventsForStudent(@PathVariable String studentId) {
         return ResponseEntity.ok(registrationService.getEventsForStudent(studentId));
     }
 }

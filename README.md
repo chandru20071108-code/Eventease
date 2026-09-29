@@ -42,3 +42,33 @@ cd EventEase
 
 # Run using Maven
 mvn spring-boot:run
+```
+
+*Note: On startup, the backend automatically seeds a test Organizer (ID: `ORG123`) and a test Student (ID: `25AM015`) for you to use!*
+
+### 2. Start the Frontend (Vite)
+The frontend uses Vite for a lightning-fast development experience.
+
+```bash
+# Navigate to the frontend directory
+cd project
+
+# Install dependencies
+npm install
+
+# Start the dev server
+npm run dev
+```
+
+Open your browser and navigate to `http://localhost:5173` to see the app!
+
+## 🧪 Testing Credentials
+
+You can use the following seeded credentials to test the dashboards:
+
+- **Student Login ID:** `25AM015`
+- **Organizer Login ID:** `ORG123`
+
+## 🤝 Contributing
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
+

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "event_id"}))
 public class Registration {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,6 +20,10 @@ public class Registration {
 
     private LocalDateTime registrationDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RegistrationStatus status = RegistrationStatus.REGISTERED;
+
     @PrePersist
     protected void onCreate() {
         this.registrationDate = LocalDateTime.now();
@@ -33,4 +38,6 @@ public class Registration {
     public void setStudent(Student student) { this.student = student; }
     public LocalDateTime getRegistrationDate() { return registrationDate; }
     public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
+    public RegistrationStatus getStatus() { return status; }
+    public void setStatus(RegistrationStatus status) { this.status = status; }
 }
