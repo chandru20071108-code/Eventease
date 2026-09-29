@@ -116,6 +116,18 @@ async function registerForEvent(eventId, studentId) {
   );
 }
 
+async function cancelRegistration(eventId, studentId) {
+  return apiFetch(
+    '/api/registrations/event/' + encodeURIComponent(eventId) +
+    '/student/' + encodeURIComponent(studentId),
+    { method: 'DELETE' }
+  );
+}
+
+async function fetchEventParticipants(eventId) {
+  return apiFetch('/api/registrations/event/' + encodeURIComponent(eventId) + '/participants');
+}
+
 /* ====================== Toast Notifications ====================== */
 function toast(message, type = 'info') {
   const el = document.createElement('div');
@@ -243,7 +255,7 @@ function getBannerClass(index) {
 }
 
 function createEventCard(event, index, options = {}) {
-  const { showManageActions = false } = options;
+  const { showManageActions = false, isRegistered = false } = options;
   const id = event.id ?? event.eventId ?? event.event_id ?? '?';
   const title = event.title || event.eventTitle || event.event_title || 'Untitled Event';
   const date = event.date || event.eventDate || event.event_date || '';
@@ -282,6 +294,7 @@ function createEventCard(event, index, options = {}) {
         </div>
       </div>
       <div class="event-card-actions">
+        <button class="btn btn-ghost btn-sm" data-action="view-students" data-id="${id}" data-title="${escapeHtml(title)}">👥 Students</button>
         <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}">Edit</button>
         <button class="btn btn-danger btn-sm" data-action="delete" data-id="${id}">Delete</button>
       </div>
@@ -312,21 +325,42 @@ function createEventCard(event, index, options = {}) {
         </div>
       </div>
       <div class="event-card-actions">
-        <button class="btn btn-primary btn-sm" data-action="register" data-id="${id}" data-title="${escapeHtml(title)}" ${isFull ? 'disabled' : ''}>
-          ${isFull ? 'Sold Out' : 'Register'}
+        <button class="btn btn-primary btn-sm" data-action="register" data-id="${id}" data-title="${escapeHtml(title)}" data-date="${date}" ${isFull || isRegistered ? 'disabled' : ''}>
+          ${isRegistered ? '✓ Registered' : (isFull ? 'Sold Out' : 'Register')}
         </button>
+        ${isRegistered ? `<button class="btn btn-danger btn-sm" data-action="cancel" data-id="${id}" data-date="${date}">Cancel</button>` : ''}
       </div>
     `;
   }
 
   // Wire up action buttons
   card.querySelectorAll('[data-action]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const action = btn.dataset.action;
       const eventId = btn.dataset.id;
       if (action === 'register') {
         openRegisterModal(eventId, btn.dataset.title);
+      } else if (action === 'cancel') {
+        const eventDate = new Date(btn.dataset.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (eventDate <= today) {
+          toast('Cannot cancel — the event date has already passed.', 'error');
+          return;
+        }
+        if (confirm('Are you sure you want to cancel your registration?')) {
+          try {
+            await cancelRegistration(eventId, currentStudentId);
+            toast('Registration cancelled successfully!', 'success');
+            const regs = await fetchStudentRegistrations(currentStudentId);
+            renderStudentEvents(Array.isArray(regs) ? regs : []);
+          } catch (err) {
+            toast('Failed to cancel: ' + err.message, 'error');
+          }
+        }
+      } else if (action === 'view-students') {
+        showParticipantsModal(eventId, btn.dataset.title);
       } else if (action === 'edit') {
         openEditModal(eventId);
       } else if (action === 'delete') {
@@ -435,7 +469,7 @@ function renderStudentEvents(events) {
   }
   studentEventsEmpty.classList.add('hidden');
   events.forEach((event, i) => {
-    studentEventsGrid.appendChild(createEventCard(event, i));
+    studentEventsGrid.appendChild(createEventCard(event, i, { isRegistered: true }));
   });
   observeReveals();
 }
@@ -779,4 +813,65 @@ if (organizerSignupForm) {
       toast('Network error.', 'error');
     }
   });
+}
+
+/* ====================== Participants Modal ====================== */
+// Inject modal HTML
+const participantsModalHTML = `
+<div id="participantsModal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal-container" style="max-width:500px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="participantsModalTitle">Registered Students</h3>
+      <button class="modal-close" id="participantsModalClose" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="participantsList" style="display:flex;flex-direction:column;gap:10px;max-height:350px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+`;
+document.body.insertAdjacentHTML('beforeend', participantsModalHTML);
+
+const participantsModal = document.getElementById('participantsModal');
+const participantsModalClose = document.getElementById('participantsModalClose');
+const participantsList = document.getElementById('participantsList');
+const participantsModalTitle = document.getElementById('participantsModalTitle');
+
+participantsModalClose.addEventListener('click', () => {
+  participantsModal.classList.remove('open');
+  participantsModal.setAttribute('aria-hidden', 'true');
+});
+participantsModal.addEventListener('click', (e) => {
+  if (e.target === participantsModal) {
+    participantsModal.classList.remove('open');
+    participantsModal.setAttribute('aria-hidden', 'true');
+  }
+});
+
+async function showParticipantsModal(eventId, eventTitle) {
+  participantsModalTitle.textContent = '👥 Students — ' + eventTitle;
+  participantsList.innerHTML = '<p style="color:var(--text-muted);text-align:center">Loading...</p>';
+  participantsModal.classList.add('open');
+  participantsModal.setAttribute('aria-hidden', 'false');
+
+  try {
+    const students = await fetchEventParticipants(eventId);
+    if (!students || students.length === 0) {
+      participantsList.innerHTML = '<p style="color:var(--text-muted);text-align:center">No students registered yet.</p>';
+      return;
+    }
+    participantsList.innerHTML = students.map((s, i) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface-2,rgba(255,255,255,0.05));border-radius:10px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#48cae4);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;">${i + 1}</div>
+        <div>
+          <div style="font-weight:600;color:var(--text-primary,#fff)">${escapeHtml(s.name || 'Unknown')}</div>
+          <div style="font-size:0.78rem;color:var(--text-muted,#aaa)">${escapeHtml(s.id || '')} &bull; ${escapeHtml(s.email || '')}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    participantsList.innerHTML = '<p style="color:#f87171;text-align:center">Failed to load students: ' + err.message + '</p>';
+  }
 }
