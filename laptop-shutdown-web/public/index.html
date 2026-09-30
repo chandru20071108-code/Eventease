@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PowerPulse — 1-Click Laptop Shutdown</title>
+  <meta name="description" content="Instant 1-Click Laptop Shutdown, Restart, Sleep & Remote Power Controller for Windows.">
+  <meta name="theme-color" content="#07080d">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff2a5f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18.36 6.64a9 9 0 1 1-12.73 0'/><line x1='12' y1='2' x2='12' y2='12'/></svg>">
+</head>
+<body>
+  <!-- Ambient background glow layers -->
+  <div class="ambient-glow glow-red"></div>
+  <div class="ambient-glow glow-blue"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="app-container">
+    <!-- Navigation / Header -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+            <line x1="12" y1="2" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">PowerPulse</span>
+          <span class="brand-badge">Windows Power Control</span>
+        </div>
+      </div>
+
+      <div class="nav-controls">
+        <div class="tunnel-badge" id="tunnelBadge" title="24/7 Remote Cloudflare Tunnel Status">
+          <span class="tunnel-pulse"></span>
+          <span id="tunnelText">TUNNEL ACTIVE</span>
+        </div>
+
+        <div class="status-indicator online" id="connectionBadge" title="Server Connection Status">
+          <span class="pulse-dot"></span>
+          <span id="connectionText">SYSTEM ONLINE</span>
+        </div>
+
+        <button id="audioToggle" class="icon-btn" title="Toggle Sound FX" aria-label="Toggle Sound Effects">
+          <svg id="audioIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.08"></path>
+          </svg>
+        </button>
+
+        <div class="simulation-toggle-wrap" title="Safe Demo: Tests sounds & UI animations without shutting down">
+          <label class="toggle-switch">
+            <input type="checkbox" id="simToggle">
+            <span class="slider"></span>
+          </label>
+          <span class="toggle-label">Demo Mode</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+
+      <!-- Active Countdown Banner (Hidden by default) -->
+      <section class="countdown-banner hidden" id="countdownBanner">
+        <div class="countdown-content">
+          <div class="countdown-ring-box">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50"></circle>
+              <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="50"></circle>
+            </svg>
+            <div class="countdown-number" id="countdownValue">10</div>
+          </div>
+          <div class="countdown-details">
+            <div class="countdown-alert-badge">ACTION IN PROGRESS</div>
+            <h3 id="countdownActionTitle">Laptop Shutting Down Soon</h3>
+            <p id="countdownActionDesc">Powering off in seconds. Click below to immediately abort.</p>
+          </div>
+          <button class="btn-abort" id="btnAbortBanner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            </svg>
+            <span>CANCEL / ABORT NOW</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- HERO: 1-Click Power Button -->
+      <section class="hero-power-section">
+        <div class="power-core-card">
+          <div class="card-header-pill">
+            <span class="sparkle">⚡</span>
+            <span>ONE-CLICK MASTER TRIGGER</span>
+          </div>
+
+          <p class="hero-subtitle">Hit the button to shut down this laptop immediately</p>
+
+          <!-- Massive Glowing Power Trigger -->
+          <div class="power-button-container">
+            <div class="power-aura-ring aura-3"></div>
+            <div class="power-aura-ring aura-2"></div>
+            <div class="power-aura-ring aura-1"></div>
+
+            <button class="master-power-btn" id="btnMasterShutdown" aria-label="One-Click Shutdown Laptop">
+              <div class="btn-ripple"></div>
+              <div class="btn-inner">
+                <svg class="power-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                  <line x1="12" y1="2" x2="12" y2="12"/>
+                </svg>
+                <span class="power-label">SHUTDOWN</span>
+                <span class="power-sublabel" id="modeSublabel">1-CLICK INSTANT</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Mode Selector Chips -->
+          <div class="mode-selector">
+            <span class="mode-title">Trigger Mode:</span>
+            <div class="mode-chips">
+              <button class="mode-chip active" data-mode="instant" data-delay="0">
+                <span class="chip-icon">⚡</span>
+                <span class="chip-text">Instant (0s)</span>
+              </button>
+              <button class="mode-chip" data-mode="buffer5" data-delay="5">
+                <span class="chip-icon">⏳</span>
+                <span class="chip-text">5s Safety Timer</span>
+              </button>
+              <button class="mode-chip" data-mode="buffer10" data-delay="10">
+                <span class="chip-icon">⏱️</span>
+                <span class="chip-text">10s Buffer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Secondary Controls & Utilities Grid -->
+      <div class="content-grid">
+
+        <!-- Quick Actions Card -->
+        <section class="glass-card actions-card">
+          <div class="card-title-row">
+            <div class="title-with-icon">
+              <span class="section-icon">⚙️</span>
+              <h3>Quick Power Actions</h3>
+            </div>
+            <span class="card-tag">Fast Control</span>
+          </div>
+
+          <div class="quick-action-buttons">
+            <button class="action-btn btn-restart" id="btnQuickRestart" data-action="restart">
+              <div class="action-icon-wrap restart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+              </div>
+              <div class="action-info">
+                <div class="action-title">Restart Laptop</div>
+                <div class="action-desc">Reboot system immediately</div>
+              </div>
+              <span class="action-arrow">→</span>
+            </button>
+
+            <button class="action-btn btn-sleep" id="btnQuickSleep" data-action="sleep">
+              <div class="action-icon-wrap sleep">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </div>
+              <div class="action-info">
+                <div class="action-title">Sleep / Suspend</div>
+                <div class="action-desc">Low-power instant pause</div>
+              </div>
+              <span class="action-arrow">→</span>
+            </button>
+
+            <button class="action-btn btn-lock" id="btnQuickLock" data-action="lock">
+              <div class="action-icon-wrap lock">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <div class="action-info">
+                <div class="action-title">Lock Screen</div>
+                <div class="action-desc">Secure workstation (Win + L)</div>
+              </div>
+              <span class="action-arrow">→</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Scheduled Sleep Timer Card -->
+        <section class="glass-card timer-card">
+          <div class="card-title-row">
+            <div class="title-with-icon">
+              <span class="section-icon">⏲️</span>
+              <h3>Sleep Timer (Scheduled)</h3>
+            </div>
+            <span class="card-tag">Night & Media</span>
+          </div>
+          <p class="card-desc">Fall asleep to movies or songs. Laptop shuts down automatically when the timer ends.</p>
+
+          <div class="timer-chips-grid">
+            <button class="timer-chip" data-minutes="15">15 min</button>
+            <button class="timer-chip" data-minutes="30">30 min</button>
+            <button class="timer-chip" data-minutes="45">45 min</button>
+            <button class="timer-chip" data-minutes="60">1 Hour</button>
+            <button class="timer-chip" data-minutes="90">1.5 Hr</button>
+            <button class="timer-chip" data-minutes="120">2 Hours</button>
+          </div>
+
+          <form id="customTimerForm" class="custom-timer-row">
+            <div class="input-wrap">
+              <input type="number" id="customMinutes" min="1" max="720" placeholder="Custom mins (e.g. 25)" required>
+              <span class="input-unit">mins</span>
+            </div>
+            <button type="submit" class="btn-start-timer">Schedule</button>
+          </form>
+        </section>
+
+        <!-- Laptop Diagnostic HUD -->
+        <section class="glass-card hud-card">
+          <div class="card-title-row">
+            <div class="title-with-icon">
+              <span class="section-icon">💻</span>
+              <h3>Hardware HUD</h3>
+            </div>
+            <span class="card-tag status-pill-mini">Live</span>
+          </div>
+
+          <div class="hud-stats">
+            <!-- Battery Metric -->
+            <div class="hud-metric">
+              <div class="hud-metric-header">
+                <span class="metric-label">Battery Level</span>
+                <span class="metric-value" id="hudBatteryPercent">--%</span>
+              </div>
+              <div class="hud-progress-bar">
+                <div class="hud-progress-fill" id="hudBatteryBar" style="width: 0%;"></div>
+              </div>
+              <div class="metric-footnote" id="hudBatteryStatus">Detecting status...</div>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="hud-details-grid">
+              <div class="hud-spec-item">
+                <span class="spec-name">Device Name</span>
+                <span class="spec-val" id="hudHostname">Detecting...</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="spec-name">Operating System</span>
+                <span class="spec-val" id="hudOs">Windows</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="spec-name">Local LAN IP</span>
+                <span class="spec-val code-font" id="hudLanIp">127.0.0.1</span>
+              </div>
+              <div class="hud-spec-item">
+                <span class="spec-name">Server Port</span>
+                <span class="spec-val code-font">7890</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Remote Phone Control Card (Public 24/7 Access) -->
+        <section class="glass-card remote-card">
+          <div class="card-title-row">
+            <div class="title-with-icon">
+              <span class="section-icon">📱</span>
+              <h3>Remote Control Anywhere</h3>
+            </div>
+            <span class="card-tag glow-cyan" id="remoteBadgeTag">🌍 24/7 Public Link</span>
+          </div>
+          <p class="card-desc">Scan with your phone to control this laptop from anywhere in the world — works on cellular 4G/5G, mobile data, or any Wi-Fi network!</p>
+
+          <div class="qr-container">
+            <div class="qr-code-box" id="qrCodeWrapper">
+              <div id="qrcode"></div>
+            </div>
+            <div class="qr-meta">
+              <div class="qr-url-box">
+                <span class="qr-url-text code-font" id="qrUrlDisplay">Connecting to tunnel...</span>
+                <button class="btn-copy-url" id="btnCopyUrl" title="Copy Phone Link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="qr-tip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span id="qrTipText">Encrypted Cloudflare Tunnel active &bull; No localhost required!</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span>PowerPulse &bull; EventEase Power Suite</span>
+      </div>
+      <div class="footer-center">
+        <span>Keyboard Shortcut: Press <kbd>Space</kbd> or <kbd>Enter</kbd> to trigger &bull; <kbd>Esc</kbd> to Abort</span>
+      </div>
+      <div class="footer-right">
+        <span class="version-badge">v1.0 Windows Edition</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Full-Screen Cinematic Shutdown Overlay (Triggered on actual shutdown) -->
+  <div class="shutdown-cinematic-overlay hidden" id="cinematicOverlay">
+    <div class="cinematic-content">
+      <div class="cinematic-icon-pulse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+          <line x1="12" y1="2" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <h1 class="cinematic-title">POWERING OFF LAPTOP</h1>
+      <p class="cinematic-subtitle">Signal delivered to Windows Kernel. Shutting down system hardware...</p>
+      
+      <div class="terminal-box">
+        <div class="terminal-line"><span class="t-green">✔</span> Signal dispatched: <code>shutdown /s /f /t 0</code></div>
+        <div class="terminal-line"><span class="t-cyan">➜</span> Closing active workspace and applications...</div>
+        <div class="terminal-line"><span class="t-yellow">⚡</span> System halting. Good night!</div>
+      </div>
+
+      <button class="btn-emergency-abort" id="btnEmergencyAbort">
+        <span>🛑 EMERGENCY ABORT</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- PIN Authentication Modal (Required for Remote Internet Control) -->
+  <div class="pin-modal-overlay hidden" id="pinModal">
+    <div class="pin-modal-card" id="pinCard">
+      <div class="pin-shield-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <h2 class="pin-title">Security PIN Required</h2>
+      <p class="pin-subtitle">Enter your 4-digit PIN to access and control this laptop over the internet.</p>
+      
+      <div class="pin-dots-display" id="pinDots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+      
+      <div class="pin-error-msg" id="pinErrorMsg"></div>
+      
+      <div class="pin-keypad">
+        <button class="key-btn" data-key="1">1</button>
+        <button class="key-btn" data-key="2">2</button>
+        <button class="key-btn" data-key="3">3</button>
+        <button class="key-btn" data-key="4">4</button>
+        <button class="key-btn" data-key="5">5</button>
+        <button class="key-btn" data-key="6">6</button>
+        <button class="key-btn" data-key="7">7</button>
+        <button class="key-btn" data-key="8">8</button>
+        <button class="key-btn" data-key="9">9</button>
+        <button class="key-btn action-key" data-key="clear">Clear</button>
+        <button class="key-btn" data-key="0">0</button>
+        <button class="key-btn action-key" data-key="back">⌫</button>
+      </div>
+      
+      <div class="pin-hint">
+        Default PIN: <code>7890</code> &bull; Configurable in <code>config.json</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Library -->
+  <script src="qrcode.min.js"></script>
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

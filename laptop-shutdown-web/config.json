@@ -1,0 +1,7 @@
+{
+  "port": 7890,
+  "pin": "7890",
+  "secret_key": "2b19798d3ca696351bbfc23e33af317b",
+  "enable_tunnel": true,
+  "allow_unauthenticated_localhost": false
+}
